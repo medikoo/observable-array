@@ -30,7 +30,7 @@ module.exports = memoize(function (Constructor) {
 	  , ReadOnly;
 
 	validFunction(Constructor);
-	Observable = module.exports = function (len) {
+	Observable = function (len) {
 		var arr, proto = (this instanceof Observable) ?
 				getPrototypeOf(this) : Observable.prototype;
 		arr = Array.apply(null, arguments);
