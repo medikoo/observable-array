@@ -37,7 +37,7 @@ mapped.on('change', function () {
   console.log("Map change emitted");
 });
 oArr.push(8); // Map change emitted (mapped == [4, 6, 8, 10, 12, 14, 16])
-oArr.shift(); // Filter change emitted (mapped == [6, 8, 10, 12, 14, 16])
+oArr.shift(); // Map change emitted (mapped == [6, 8, 10, 12, 14, 16])
 ```
 
 ### Installation
