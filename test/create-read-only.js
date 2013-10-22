@@ -13,7 +13,7 @@ module.exports = function (t, a) {
 	a.throws(function () { arr.shift(); }, RangeError, "Shift");
 	a.throws(function () { arr.sort(); }, RangeError, "Sort");
 	a.throws(function () { arr.splice(0, 2); }, RangeError, "Splice");
-	a.throws(function () { arr.ushift(0, 2); }, RangeError, "Unshift");
+	a.throws(function () { arr.unshift(0, 2); }, RangeError, "Unshift");
 
 	a.deep(arr, ['foo', 'bar'], "Content unaltered");
 };
