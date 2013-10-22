@@ -18,7 +18,7 @@ module.exports = memoize(function (Constructor) {
 	var ReadOnly;
 
 	validFunction(Constructor);
-	ReadOnly = module.exports = function (len) {
+	ReadOnly = function (len) {
 		var arr, proto = (this instanceof ReadOnly) ?
 				getPrototypeOf(this) : ReadOnly.prototype;
 		arr = Array.apply(null, arguments);
