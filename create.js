@@ -27,7 +27,7 @@ if (!isSubclassable) {
 }
 
 module.exports = memoize(function (Constructor) {
-	var Observable, filter, map, pop, push, reverse, shift, sort, splice, unshift
+	var Observable, forEach, map, pop, push, reverse, shift, sort, splice, unshift
 	  , ReadOnly;
 
 	validFunction(Constructor);
@@ -41,7 +41,7 @@ module.exports = memoize(function (Constructor) {
 	};
 	if (setPrototypeOf) setPrototypeOf(Observable, Constructor);
 
-	filter = Constructor.prototype.filter;
+	forEach = Constructor.prototype.forEach;
 	map = Constructor.prototype.map;
 	pop = Constructor.prototype.pop;
 	push = Constructor.prototype.push;
@@ -150,23 +150,31 @@ module.exports = memoize(function (Constructor) {
 			return result;
 		}),
 		filter: d(function (callbackFn/*, thisArg*/) {
-			var result, listener;
+			var result, listener, refresh;
 			(value(this) && callable(callbackFn));
 			callbackFn = memoize(bind.call(callbackFn, arguments[1]), { length: 1 });
-			result = ReadOnly.apply(null, filter.call(this, callbackFn));
-			this.on('change', listener = function () {
-				var nu = filter.call(this, callbackFn), changed;
-				if (nu.length !== result.length) {
-					changed = true;
-					result.length = nu.length;
-				}
-				nu.forEach(function (val, i) {
-					if (eq(result[i], val)) return;
-					changed = true;
-					result[i] = val;
+			result = new ReadOnly();
+			refresh = function () {
+				var i = 0, changed;
+				forEach.call(this, function (val, j, self) {
+					if (callbackFn(val, j, self)) {
+						if (!hasOwnProperty.call(result, i) || !eq(result[i], val)) {
+							changed = true;
+							result[i] = val;
+						}
+						++i;
+					}
 				});
-				if (changed) result.emit('change');
-			}.bind(this));
+				if (result.length !== i) {
+					changed = true;
+					result.length = i;
+				}
+				return changed;
+			}.bind(this);
+			refresh();
+			this.on('change', listener = function () {
+				if (refresh()) result.emit('change');
+			});
 			result.once('unlink', this.off.bind(this, 'change', listener));
 			defineProperty(result, 'refresh', d(function (index) {
 				var filtered;
