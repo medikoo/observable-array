@@ -5,7 +5,7 @@ var isArray = Array.isArray;
 module.exports = function (t, a) {
 	var ObservableArray = t(Array)
 	  , arr = new ObservableArray('foo', 'bar', 23)
-	  , evented = 0, x = {}, y, z, w, arr2, listener
+	  , evented = 0, x = {}, y, z, w, arr2, listener;
 	a(isArray(arr), true, "Is array");
 	a(arr instanceof ObservableArray, true, "Subclassed");
 
