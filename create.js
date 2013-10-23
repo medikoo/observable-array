@@ -191,23 +191,29 @@ module.exports = memoize(function (Constructor) {
 			return result;
 		}),
 		map: d(function (callbackFn/*, thisArg*/) {
-			var result, listener;
+			var result, listener, refresh;
 			(value(this) && callable(callbackFn));
 			callbackFn = memoize(bind.call(callbackFn, arguments[1]), { length: 1 });
-			result = ReadOnly.apply(null, map.call(this, callbackFn));
-			this.on('change', listener = function () {
-				var nu = map.call(this, callbackFn), changed;
-				if (nu.length !== result.length) {
+			result = new ReadOnly();
+			refresh = function () {
+				var changed;
+				if (result.length !== this.length) {
 					changed = true;
-					result.length = nu.length;
+					result.length = this.length;
 				}
-				nu.forEach(function (val, i) {
-					if (eq(result[i], val)) return;
-					changed = true;
-					result[i] = val;
+				forEach.call(this, function (val, i, self) {
+					val = callbackFn(val, i, self);
+					if (!hasOwnProperty.call(result, i) || !eq(result[i], val)) {
+						changed = true;
+						result[i] = val;
+					}
 				});
-				if (changed) result.emit('change');
-			}.bind(this));
+				return changed;
+			}.bind(this);
+			refresh();
+			this.on('change', listener = function () {
+				if (refresh()) result.emit('change');
+			});
 			result.once('unlink', this.off.bind(this, 'change', listener));
 			defineProperty(result, 'refresh', d(function (index) {
 				var val;
