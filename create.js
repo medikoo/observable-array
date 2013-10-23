@@ -277,6 +277,7 @@ module.exports = memoize(function (Constructor) {
 		}),
 		filter: d(function () {
 			return memoize(filter.bind(this), {
+				length: 2,
 				refCounter: true,
 				dispose: function (arr) {
 					arr._onDispose();
@@ -286,6 +287,7 @@ module.exports = memoize(function (Constructor) {
 		}),
 		map: d(function () {
 			return memoize(map.bind(this), {
+				length: 2,
 				refCounter: true,
 				dispose: function (arr) {
 					arr._onDispose();
