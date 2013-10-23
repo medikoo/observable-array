@@ -15,9 +15,10 @@ var isSubclassable = require('es5-ext/array/_is-subclassable')
   , memoize        = require('memoizee/lib/regular')
   , createReadOnly = require('./create-read-only')
 
-  , bind = Function.prototype.bind
+  , bind = Function.prototype.bind, max = Math.max
   , defineProperty = Object.defineProperty
   , getPrototypeOf = Object.getPrototypeOf
+  , hasOwnProperty = Object.prototype.hasOwnProperty
   , concat, arrSplice;
 
 if (!isSubclassable) {
@@ -111,6 +112,43 @@ module.exports = memoize(function (Constructor) {
 			return result;
 		}),
 
+		slice: d(function (start, end) {
+			var result, refresh, listener;
+			start = toInt(start);
+			end = (end === undefined) ? Infinity : toInt(end);
+			result = new ReadOnly();
+			refresh = function () {
+				var s = start, e = end, length = this.length, changed, i;
+				if (s < 0) s = max(length + s, 0);
+				else if (s > length) s = length;
+				if (e < 0) e = max(length + e, 0);
+				else if (e > length) e = length;
+				if (s > e) s = e;
+				if ((e - s) !== result.length) changed = true;
+				result.length = e - s;
+				i = 0;
+				while (s !== e) {
+					if (hasOwnProperty.call(this, s)) {
+						if (!hasOwnProperty.call(result, i) || !eq(result[i], this[s])) {
+							changed = true;
+							result[i] = this[s];
+						}
+					} else if (hasOwnProperty.call(result, i)) {
+						changed = true;
+						delete result[i];
+					}
+					++i;
+					++s;
+				}
+				return changed;
+			}.bind(this);
+			refresh();
+			this.on('change', listener = function () {
+				if (refresh()) result.emit('change');
+			});
+			result.once('unlink', this.off.bind(this, 'change', listener));
+			return result;
+		}),
 		filter: d(function (callbackFn/*, thisArg*/) {
 			var result, listener;
 			(value(this) && callable(callbackFn));

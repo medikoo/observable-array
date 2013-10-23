@@ -5,13 +5,13 @@ var isArray = Array.isArray;
 module.exports = function (t, a) {
 	var ObservableArray = t(Array)
 	  , arr = new ObservableArray('foo', 'bar', 23)
-	  , evented = 0, x = {}, y, z, w, arr2;
+	  , evented = 0, x = {}, y, z, w, arr2, listener
 	a(isArray(arr), true, "Is array");
 	a(arr instanceof ObservableArray, true, "Subclassed");
 
 	a.deep(arr, ['foo', 'bar', 23], "Constructor");
 
-	arr.on('change', function () { ++evented; });
+	arr.on('change', listener = function () { ++evented; });
 
 	arr.pop();
 	a.deep(arr, ['foo', 'bar'], "Pop: value");
@@ -88,6 +88,20 @@ module.exports = function (t, a) {
 	a.deep(arr, ['elo', 'bar', 'abc', 'foo', 'raz', 'wed'], "Unshift: content");
 	a(evented, 16, "Unshift: event");
 
+	// Slice
+	evented = 0;
+	arr2 = arr.slice(1, 3);
+	arr.off('change', listener);
+	arr2.on('change', listener);
+
+	a.deep(arr2, ['bar', 'abc'], "Slice");
+	arr.push('mucha');
+	a(evented, 0, "Slice: Outside of scope: Event");
+	a.deep(arr2, ['bar', 'abc'], "Slice: Outside of scope: Content");
+	arr.unshift('pre');
+	a(evented, 1, "Slice: Within scope: Event");
+	a.deep(arr2, ['elo', 'bar'], "Slice: Within scope: Content");
+
 	// Filter
 	x = { val: 12 };
 	y = { val: 43 };
@@ -96,7 +110,7 @@ module.exports = function (t, a) {
 	evented = 0;
 
 	arr2 = arr.filter(function (val) { return val.val % 2; });
-	arr2.on('change', function () { ++evented; });
+	arr2.on('change', listener);
 
 	a.deep(arr2, [y], "Filter");
 	w = { val: 33 };
@@ -128,7 +142,7 @@ module.exports = function (t, a) {
 	evented = 0;
 
 	arr2 = arr.map(function (val) { return val.val * 2; });
-	arr2.on('change', function () { ++evented; });
+	arr2.on('change', listener);
 
 	a.deep(arr2, [22, 86, 108], "Map");
 	arr.push(w);
