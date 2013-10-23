@@ -27,7 +27,7 @@ if (!isSubclassable) {
 }
 
 module.exports = memoize(function (Constructor) {
-	var Observable, forEach, map, pop, push, reverse, shift, sort, splice, unshift
+	var Observable, forEach, pop, push, reverse, shift, sort, splice, unshift
 	  , ReadOnly;
 
 	validFunction(Constructor);
@@ -42,7 +42,6 @@ module.exports = memoize(function (Constructor) {
 	if (setPrototypeOf) setPrototypeOf(Observable, Constructor);
 
 	forEach = Constructor.prototype.forEach;
-	map = Constructor.prototype.map;
 	pop = Constructor.prototype.pop;
 	push = Constructor.prototype.push;
 	reverse = Constructor.prototype.reverse;
