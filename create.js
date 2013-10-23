@@ -3,6 +3,7 @@
 var isSubclassable = require('es5-ext/array/_is-subclassable')
   , aFrom          = require('es5-ext/array/from')
   , isCopy         = require('es5-ext/array/#/is-copy')
+  , invoke         = require('es5-ext/function/invoke')
   , validFunction  = require('es5-ext/function/valid-function')
   , toInt          = require('es5-ext/number/to-int')
   , assign         = require('es5-ext/object/assign')
@@ -21,6 +22,7 @@ var isSubclassable = require('es5-ext/array/_is-subclassable')
   , defineProperties = Object.defineProperties
   , getPrototypeOf = Object.getPrototypeOf
   , hasOwnProperty = Object.prototype.hasOwnProperty
+  , invokeDispose = invoke('_dispose')
   , concat, arrSplice;
 
 require('memoizee/lib/ext/ref-counter');
@@ -94,7 +96,7 @@ module.exports = memoize(function (Constructor) {
 				if (disposed) return;
 				this.slice.clearRef(start, end);
 			}.bind(this)),
-			_onDispose: d(function () {
+			_dispose: d(function () {
 				this.off('change', listener);
 				disposed = true;
 			}.bind(this))
@@ -146,7 +148,7 @@ module.exports = memoize(function (Constructor) {
 				if (disposed) return;
 				this.filter.clearRef(callbackFn, thisArg);
 			}.bind(this)),
-			_onDispose: d(function () {
+			_dispose: d(function () {
 				this.off('change', listener);
 				disposed = true;
 			}.bind(this))
@@ -196,7 +198,7 @@ module.exports = memoize(function (Constructor) {
 				if (disposed) return;
 				this.map.clearRef(callbackFn, thisArg);
 			}.bind(this)),
-			_onDispose: d(function () {
+			_dispose: d(function () {
 				this.off('change', listener);
 				disposed = true;
 			}.bind(this))
@@ -265,35 +267,17 @@ module.exports = memoize(function (Constructor) {
 		})
 	}, lazy({
 		slice: d(function () {
-			return memoize(slice.bind(this), {
-				resolvers: [toInt, function (val) { return (val === undefined) ?
-						Infinity : toInt(val); }],
-				refCounter: true,
-				dispose: function (arr) {
-					arr._onDispose();
-					delete arr._onDispose;
-				}
-			});
+			return memoize(slice.bind(this), { resolvers: [toInt,
+				function (val) { return (val === undefined) ? Infinity : toInt(val); }],
+				refCounter: true, dispose: invokeDispose });
 		}),
 		filter: d(function () {
-			return memoize(filter.bind(this), {
-				length: 2,
-				refCounter: true,
-				dispose: function (arr) {
-					arr._onDispose();
-					delete arr._onDispose;
-				}
-			});
+			return memoize(filter.bind(this), { length: 2, refCounter: true,
+				dispose: invokeDispose });
 		}),
 		map: d(function () {
-			return memoize(map.bind(this), {
-				length: 2,
-				refCounter: true,
-				dispose: function (arr) {
-					arr._onDispose();
-					delete arr._onDispose;
-				}
-			});
+			return memoize(map.bind(this), { length: 2, refCounter: true,
+				dispose: invokeDispose });
 		})
 	}))));
 
