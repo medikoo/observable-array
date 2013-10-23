@@ -29,8 +29,7 @@ module.exports = memoize(function (Constructor) {
 	if (setPrototypeOf) setPrototypeOf(ReadOnly, Constructor);
 
 	ReadOnly.prototype = ee(create(Constructor.prototype, {
-		constructor: d(ReadOnly),
-		unlink: d(function () { this.emit('unlink'); })
+		constructor: d(ReadOnly)
 	}));
 
 	['pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift']
