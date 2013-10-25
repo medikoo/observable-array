@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require('./create')(Array);
+module.exports = require('./filter-map-slice')(require('./create')(Array));
