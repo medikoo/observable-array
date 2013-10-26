@@ -169,7 +169,7 @@ module.exports = memoize(function (ObservableArray) {
 				return changed;
 			}.bind(this);
 			refresh();
-			this.on('change', listener = function (type, arg1, arg2) {
+			this.on('change', listener = function (type, arg1) {
 				var i, tmp;
 				if (type === 'pop') {
 					if (!cb(arg1)) return;
