@@ -14,12 +14,12 @@ var aFrom          = require('es5-ext/array/from')
   , createReadOnly = require('./create-read-only')
 
   , filter = Array.prototype.filter, forEach = Array.prototype.forEach
-  , pop = Array.prototype.pop, push = Array.prototype.push
-  , reverse = Array.prototype.reverse, shift = Array.prototype.shift
-  , slice = Array.prototype.slice, sort = Array.prototype.sort
-  , splice = Array.prototype.splice, unshift = Array.prototype.unshift
-  , bind = Function.prototype.bind, max = Math.max
-  , defineProperties = Object.defineProperties
+  , map = Array.prototype.map, pop = Array.prototype.pop
+  , push = Array.prototype.push, reverse = Array.prototype.reverse
+  , shift = Array.prototype.shift, slice = Array.prototype.slice
+  , sort = Array.prototype.sort, splice = Array.prototype.splice
+  , unshift = Array.prototype.unshift, bind = Function.prototype.bind
+  , max = Math.max, defineProperties = Object.defineProperties
   , hasOwnProperty = Object.prototype.hasOwnProperty
   , invokeDispose = invoke('_dispose');
 
@@ -256,8 +256,44 @@ module.exports = memoize(function (ObservableArray) {
 				return changed;
 			}.bind(this);
 			refresh();
-			this.on('change', listener = function () {
-				if (refresh()) result.emit('change');
+			this.on('change', listener = function (type, arg1) {
+				var i, tmp, arg2;
+				if (type === 'pop') {
+					result.emit('change', 'pop', pop.call(result));
+				} else if (type === 'push') {
+					i = this.length - arg1.length;
+					arg1 = map.call(arg1, function (val) {
+						return cb(val, i++, this);
+					}, this);
+					push.apply(result, arg1);
+					result.emit('change', 'push', arg1);
+				} else if (type === 'reverse') {
+					tmp = aFrom(result);
+					reverse.call(result);
+					if (!isCopy.call(result, tmp)) result.emit('change', 'reverse');
+				} else if (type === 'shift') {
+					result.emit('change', 'shift', shift.call(result));
+				} else if (type === 'splice') {
+					i = toInt(arg1);
+					if (i < 0) i = this.length - i;
+					arg1 = map.call(arg1, function (val, j) {
+						if (j < 2) return val;
+						return cb(val, i++, this);
+					}, this);
+					arg2 = splice.apply(result, arg1);
+					if (((arg1.length <= 2) && arg2.length) ||
+							!isCopy.call(arg1.slice(2), arg2)) {
+						result.emit('change', 'splice', arg1, arg2);
+					}
+				} else if (type === 'unshift') {
+					arg1 = map.call(arg1, function (val, i) {
+						return cb(val, i, this);
+					}, this);
+					unshift.apply(result, arg1);
+					result.emit('change', 'unshift', arg1);
+				} else if (refresh()) {
+					result.emit('change');
+				}
 			});
 			defineProperties(result, {
 				refresh: d(function (index) {
