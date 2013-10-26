@@ -250,6 +250,7 @@ module.exports = memoize(function (ObservableArray) {
 			});
 			return result;
 		}, { length: 2, refCounter: true, dispose: invokeDispose }),
+
 		map: d(function (callbackFn/*, thisArg*/) {
 			var result, listener, refresh, thisArg, disposed, cb;
 			(value(this) && callable(callbackFn));
