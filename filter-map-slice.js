@@ -1,6 +1,8 @@
 'use strict';
 
-var invoke         = require('es5-ext/function/invoke')
+var aFrom          = require('es5-ext/array/from')
+  , isCopy         = require('es5-ext/array/#/is-copy')
+  , invoke         = require('es5-ext/function/invoke')
   , validFunction  = require('es5-ext/function/valid-function')
   , toInt          = require('es5-ext/number/to-int')
   , eq             = require('es5-ext/object/eq')
@@ -11,12 +13,13 @@ var invoke         = require('es5-ext/function/invoke')
   , memoizeMethods = require('memoizee/lib/d')(memoize)
   , createReadOnly = require('./create-read-only')
 
-  , forEach = Array.prototype.forEach, pop = Array.prototype.pop
-  , push = Array.prototype.push, reverse = Array.prototype.reverse
-  , shift = Array.prototype.shift, slice = Array.prototype.slice
-  , sort = Array.prototype.sort, splice = Array.prototype.splice
-  , unshift = Array.prototype.unshift, bind = Function.prototype.bind
-  , max = Math.max, defineProperties = Object.defineProperties
+  , filter = Array.prototype.filter, forEach = Array.prototype.forEach
+  , pop = Array.prototype.pop, push = Array.prototype.push
+  , reverse = Array.prototype.reverse, shift = Array.prototype.shift
+  , slice = Array.prototype.slice, sort = Array.prototype.sort
+  , splice = Array.prototype.splice, unshift = Array.prototype.unshift
+  , bind = Function.prototype.bind, max = Math.max
+  , defineProperties = Object.defineProperties
   , hasOwnProperty = Object.prototype.hasOwnProperty
   , invokeDispose = invoke('_dispose');
 
@@ -166,8 +169,46 @@ module.exports = memoize(function (ObservableArray) {
 				return changed;
 			}.bind(this);
 			refresh();
-			this.on('change', listener = function () {
-				if (refresh()) result.emit('change');
+			this.on('change', listener = function (type, arg1, arg2) {
+				var i, tmp;
+				if (type === 'pop') {
+					if (!cb(arg1)) return;
+					pop.call(result);
+					result.emit('change', 'pop', arg1);
+				} else if (type === 'push') {
+					i = this.length - arg1.length;
+					arg1 = filter.call(arg1, function (val) {
+						return cb(val, i++, this);
+					}, this);
+					if (!arg1.length) return;
+					push.apply(result, arg1);
+					result.emit('change', 'push', arg1);
+				} else if (type === 'reverse') {
+					if (result.length <= 1) return;
+					tmp = aFrom(result);
+					reverse.call(result);
+					if (!isCopy.call(result, tmp)) result.emit('change', 'reverse');
+				} else if (type === 'shift') {
+					if (!cb(arg1)) return;
+					shift.call(result);
+					result.emit('change', 'shift', arg1);
+				} else if (type === 'sort') {
+					if (result.length <= 1) return;
+					tmp = aFrom(result);
+					sort.call(result, arg1);
+					if (!isCopy.call(result, tmp)) result.emit('change', 'sort', arg1);
+				} else if (type === 'splice') {
+					if (refresh()) result.emit('change');
+				} else if (type === 'unshift') {
+					arg1 = filter.call(arg1, function (val, i) {
+						return cb(val, i, this);
+					}, this);
+					if (!arg1.length) return;
+					unshift.apply(result, arg1);
+					result.emit('change', 'unshift', arg1);
+				} else if (refresh()) {
+					result.emit('change');
+				}
 			});
 			defineProperties(result, {
 				refresh: d(function (index) {
