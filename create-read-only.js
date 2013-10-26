@@ -15,7 +15,7 @@ var validFunction  = require('es5-ext/function/valid-function')
 readOnlyThrow = d(function () { throw new RangeError("Array is read-only"); });
 
 module.exports = memoize(function (Constructor) {
-	var ReadOnly;
+	var ReadOnly, descs;
 
 	validFunction(Constructor);
 	ReadOnly = function (len) {
@@ -32,13 +32,13 @@ module.exports = memoize(function (Constructor) {
 		constructor: d(ReadOnly)
 	}));
 
+	descs = {};
 	['pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift']
 		.forEach(function (name) {
-			var descs = {};
 			descs[name] = readOnlyThrow;
 			descs['_' + name] = getDescriptor(Constructor.prototype, name);
-			defineProperties(ReadOnly.prototype, descs);
 		});
+	defineProperties(ReadOnly.prototype, descs);
 
 	return ReadOnly;
 });
