@@ -81,4 +81,42 @@ exports.tests = function (ObservableArray, a) {
 	arr2.refreshAll();
 	a.deep(arr2, [22, 20, 64, 40], "Filter: refresh all");
 	a(evented, 3, "Filter: refresh");
+
+	a.h1("Sorted");
+	x = { val: 32 };
+	y = { val: 23 };
+	z = { val: 54 };
+	arr = new ObservableArray(x, y, z);
+	evented = 0;
+
+	arr2 = arr.sorted(function (a, b) { return a.val - b.val; });
+	arr2.on('change', listener);
+	a.deep(arr2, [y, x, z]);
+
+	a.h2("Push");
+	w =  { val: 50 };
+	arr.push(w);
+	a.deep(arr2, [y, x, w, z]);
+	a(evented, 1, "Event");
+
+	a.h2("Shift");
+	arr.shift();
+	a.deep(arr2, [y, w, z]);
+	a(evented, 2, "Event");
+
+	a.h2("Inner update");
+	y.val = 100;
+	a.deep(arr2, [y, w, z]);
+	a(evented, 2, "Event");
+
+	a.h2("Refresh");
+	arr2.refresh(0);
+	a.deep(arr2, [w, z, y]);
+	a(evented, 3, "Event");
+
+	a.h2("Refresh all");
+	z.val = 320;
+	arr2.refreshAll();
+	a.deep(arr2, [w, y, z]);
+	a(evented, 4, "Event");
 };

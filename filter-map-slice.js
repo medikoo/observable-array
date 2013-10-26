@@ -1,7 +1,9 @@
 'use strict';
 
 var aFrom          = require('es5-ext/array/from')
+  , eIndexOf       = require('es5-ext/array/#/e-index-of')
   , isCopy         = require('es5-ext/array/#/is-copy')
+  , remove         = require('es5-ext/array/#/remove')
   , invoke         = require('es5-ext/function/invoke')
   , validFunction  = require('es5-ext/function/valid-function')
   , toInt          = require('es5-ext/number/to-int')
@@ -338,6 +340,70 @@ module.exports = memoize(function (ObservableArray) {
 				unref: d(function () {
 					if (disposed) return;
 					this.map.clearRef(callbackFn, thisArg);
+				}.bind(this)),
+				_dispose: d(function () {
+					this.off('change', listener);
+					disposed = true;
+				}.bind(this))
+			});
+			return result;
+		}, { length: 2, refCounter: true, dispose: invokeDispose }),
+
+		sorted: d(function (compareFn) {
+			var result, listener, disposed, refresh;
+			(value(this) && callable(compareFn));
+			result = ReadOnly.from(this);
+			sort.call(result, compareFn);
+			refresh = function () {
+				var changed, tmp = aFrom(this).sort(compareFn);
+				if (result.length !== tmp.length) {
+					changed = true;
+					result.length = tmp.length;
+				}
+				forEach.call(tmp, function (val, i) {
+					if (!hasOwnProperty.call(result, i) || !eq(result[i], val)) {
+						changed = true;
+						result[i] = val;
+					}
+				});
+				return changed;
+			}.bind(this);
+			this.on('change', listener = function (type, arg1, arg2) {
+				var i;
+				if ((type === 'reverse') || (type === 'sort')) return;
+				if ((type === 'pop') || (type === 'shift')) {
+					i = eIndexOf.call(result, arg1);
+					result.emit('change', 'splice', [i, 1], splice.call(result, i, 1));
+				} else if ((type === 'push') || (type === 'unshift')) {
+					push.apply(result, arg1);
+					sort.call(result, compareFn);
+					result.emit('change');
+				} else if (type === 'splice') {
+					remove.apply(result, arg2);
+					push.apply(result, slice.call(arg1, 2));
+					sort.call(result, compareFn);
+					result.emit('change');
+				} else if (type === 'index') {
+					if (arguments.length > 2) {
+						result[eIndexOf.call(result, arg2)] = this[arg1];
+					} else {
+						push.call(result, this[arg1]);
+					}
+					result.emit('change');
+				} else if (refresh()) {
+					result.emit('change');
+				}
+			});
+			defineProperties(result, {
+				refresh: d(function (index) {
+					if (refresh()) result.emit('change');
+				}.bind(this)),
+				refreshAll: d(function () {
+					if (refresh()) result.emit('change');
+				}),
+				unref: d(function () {
+					if (disposed) return;
+					this.sorted.clearRef(compareFn);
 				}.bind(this)),
 				_dispose: d(function () {
 					this.off('change', listener);
