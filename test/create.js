@@ -64,7 +64,8 @@ module.exports = function (t, a) {
 
 	arr.push('wed');
 	arr.push('abc');
-	arr.push('raz');
+
+	arr.set(arr.length, 'raz');
 	a(evented, 13, "Events");
 
 	arr.sort();
