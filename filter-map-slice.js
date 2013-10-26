@@ -1,8 +1,6 @@
 'use strict';
 
-var aFrom          = require('es5-ext/array/from')
-  , isCopy         = require('es5-ext/array/#/is-copy')
-  , invoke         = require('es5-ext/function/invoke')
+var invoke         = require('es5-ext/function/invoke')
   , validFunction  = require('es5-ext/function/valid-function')
   , toInt          = require('es5-ext/number/to-int')
   , eq             = require('es5-ext/object/eq')
