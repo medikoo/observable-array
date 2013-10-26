@@ -1,6 +1,8 @@
 'use strict';
 
-var invoke         = require('es5-ext/function/invoke')
+var aFrom          = require('es5-ext/array/from')
+  , isCopy         = require('es5-ext/array/#/is-copy')
+  , invoke         = require('es5-ext/function/invoke')
   , validFunction  = require('es5-ext/function/valid-function')
   , toInt          = require('es5-ext/number/to-int')
   , eq             = require('es5-ext/object/eq')
@@ -11,9 +13,12 @@ var invoke         = require('es5-ext/function/invoke')
   , memoizeMethods = require('memoizee/lib/d')(memoize)
   , createReadOnly = require('./create-read-only')
 
-  , forEach = Array.prototype.forEach
-  , bind = Function.prototype.bind, max = Math.max
-  , defineProperties = Object.defineProperties
+  , forEach = Array.prototype.forEach, pop = Array.prototype.pop
+  , push = Array.prototype.push, reverse = Array.prototype.reverse
+  , shift = Array.prototype.shift, slice = Array.prototype.slice
+  , sort = Array.prototype.sort, splice = Array.prototype.splice
+  , unshift = Array.prototype.unshift, bind = Function.prototype.bind
+  , max = Math.max, defineProperties = Object.defineProperties
   , hasOwnProperty = Object.prototype.hasOwnProperty
   , invokeDispose = invoke('_dispose');
 
@@ -26,20 +31,20 @@ module.exports = memoize(function (ObservableArray) {
 
 	defineProperties(ObservableArray.prototype, memoizeMethods({
 		slice: d(function (start, end) {
-			var result, refresh, listener, disposed;
-			result = new ReadOnly();
-			if (start === end) return result;
+			var result, refresh, listener, disposed, rStart, rEnd, recalculate;
+			if ((((start > 0) && (end >= 0)) || ((start < 0) && (end < 0))) &&
+					(start >= end)) {
+				return new ReadOnly();
+			}
 			refresh = function () {
-				var s = start, e = end, length = this.length, changed, i;
-				if (s < 0) s = max(length + s, 0);
-				else if (s > length) s = length;
-				if (e < 0) e = max(length + e, 0);
-				else if (e > length) e = length;
-				if (s > e) s = e;
-				if ((e - s) !== result.length) changed = true;
-				result.length = e - s;
+				var changed, i, s = rStart;
+				if (result.length !== (rEnd - rStart)) {
+					result.length = rEnd - rStart;
+					changed = true;
+				}
+				result.length = rEnd - rStart;
 				i = 0;
-				while (s !== e) {
+				while (s !== rEnd) {
 					if (hasOwnProperty.call(this, s)) {
 						if (!hasOwnProperty.call(result, i) || !eq(result[i], this[s])) {
 							changed = true;
@@ -54,10 +59,76 @@ module.exports = memoize(function (ObservableArray) {
 				}
 				return changed;
 			}.bind(this);
-			refresh();
-			this.on('change', listener = function () {
-				if (refresh()) result.emit('change');
-			});
+			if ((start === 0) && (end === Infinity)) {
+				// Pure copy
+				rStart = 0;
+				result = ReadOnly.from(this);
+				this.on('change', listener = function (type, arg1, arg2) {
+					if (type === 'pop') {
+						pop.call(result);
+						result.emit('change', 'pop', arg1);
+					} else if (type === 'push') {
+						push.apply(result, arg1);
+						result.emit('change', 'push', arg1);
+					} else if (type === 'reverse') {
+						reverse.call(result);
+						result.emit('change', 'reverse');
+					} else if (type === 'shift') {
+						shift.call(result);
+						result.emit('change', 'shift', arg1);
+					} else if (type === 'sort') {
+						sort.call(result, arg1);
+						result.emit('change', 'sort', arg1);
+					} else if (type === 'splice') {
+						arg2 = splice.apply(result, arg1);
+						result.emit('change', 'splice', arg1, arg2);
+					} else if (type === 'unshift') {
+						unshift.apply(result, arg1);
+						result.emit('change', 'unshift', arg1);
+					} else {
+						rEnd = this.length;
+						refresh();
+						result.emit('change');
+					}
+				});
+			} else {
+				result = new ReadOnly();
+				recalculate = function () {
+					var l = this.length;
+					rStart = start;
+					rEnd = end;
+					if (rStart < 0) rStart = max(l + rStart, 0);
+					else if (rStart > l) rStart = l;
+					if (rEnd < 0) rEnd = max(l + rEnd, 0);
+					else if (rEnd > l) rEnd = l;
+					if (rStart > rEnd) rStart = rEnd;
+				}.bind(this);
+				recalculate();
+				refresh();
+				this.on('change', listener = function (type, arg1, arg2) {
+					if (type === 'pop') {
+						if ((rEnd === (this.length + 1)) && (rStart !== rEnd)) {
+							pop.call(result);
+							recalculate();
+							result.emit('change', 'pop', arg1);
+						} else {
+							recalculate();
+						}
+					} else if (type === 'push') {
+						recalculate();
+						if ((rEnd > (this.length - arg1.length)) && (rStart !== rEnd)) {
+							if (rEnd !== this.length) {
+								arg1 = slice.call(arg1, 0, arg1.length - (this.length - rEnd));
+							}
+							push.apply(result, arg1);
+							result.emit('change', 'push', arg1);
+						}
+					} else {
+						recalculate();
+						if (refresh()) result.emit('change');
+					}
+				});
+			}
 			defineProperties(result, {
 				unref: d(function () {
 					if (disposed) return;
