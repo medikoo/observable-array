@@ -36,8 +36,9 @@ module.exports = memoize(function (Constructor) {
 	}));
 
 	descs = {};
-	['pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift']
+	['pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift', 'set']
 		.forEach(function (name) {
+			if (!Constructor.prototype[name]) return;
 			descs[name] = readOnlyThrow;
 			descs['_' + name] = getDescriptor(Constructor.prototype, name);
 		});
