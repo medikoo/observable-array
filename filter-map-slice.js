@@ -86,6 +86,9 @@ module.exports = memoize(function (ObservableArray) {
 					} else if (type === 'unshift') {
 						unshift.apply(result, arg1);
 						result.emit('change', 'unshift', arg1);
+					} else if (type === 'index') {
+						result[arg1] = this[arg1];
+						result.emit('change', 'index', arg1, arg2);
 					} else {
 						rEnd = this.length;
 						refresh();
@@ -106,7 +109,7 @@ module.exports = memoize(function (ObservableArray) {
 				}.bind(this);
 				recalculate();
 				refresh();
-				this.on('change', listener = function (type, arg1) {
+				this.on('change', listener = function (type, arg1, arg2) {
 					if (type === 'pop') {
 						if ((rEnd === (this.length + 1)) && (rStart !== rEnd)) {
 							pop.call(result);
@@ -124,6 +127,10 @@ module.exports = memoize(function (ObservableArray) {
 							push.apply(result, arg1);
 							result.emit('change', 'push', arg1);
 						}
+					} else if (type === 'index') {
+						if ((rStart > arg1) || (rEnd <= arg1)) return;
+						result[arg1 - rStart] = this[arg1];
+						result.emit('change', 'index', arg1 - rStart, arg2);
 					} else {
 						recalculate();
 						if (refresh()) result.emit('change');
@@ -169,7 +176,7 @@ module.exports = memoize(function (ObservableArray) {
 				return changed;
 			}.bind(this);
 			refresh();
-			this.on('change', listener = function (type, arg1) {
+			this.on('change', listener = function (type, arg1, arg2) {
 				var i, tmp;
 				if (type === 'pop') {
 					if (!cb(arg1)) return;
@@ -206,6 +213,12 @@ module.exports = memoize(function (ObservableArray) {
 					if (!arg1.length) return;
 					unshift.apply(result, arg1);
 					result.emit('change', 'unshift', arg1);
+				} else if (type === 'index') {
+					if ((arguments.length < 3) ||
+							(Boolean(cb(arg2)) !== Boolean(cb(this[arg1], arg1, this)))) {
+						if (refresh()) result.emit('change');
+						return;
+					}
 				} else if (refresh()) {
 					result.emit('change');
 				}
@@ -217,11 +230,14 @@ module.exports = memoize(function (ObservableArray) {
 					if (!this.hasOwnProperty(index)) return;
 					filtered = Boolean(cb(this[index]));
 					cb.clear(this[index]);
-					if (Boolean(cb(this[index])) !== filtered) listener();
+					if (Boolean(cb(this[index])) !== filtered) {
+						refresh();
+						result.emit('change');
+					}
 				}.bind(this)),
 				refreshAll: d(function () {
 					cb.clearAll();
-					listener();
+					if (refresh()) result.emit('change');
 				}),
 				unref: d(function () {
 					if (disposed) return;
@@ -257,7 +273,7 @@ module.exports = memoize(function (ObservableArray) {
 			}.bind(this);
 			refresh();
 			this.on('change', listener = function (type, arg1) {
-				var i, tmp, arg2;
+				var i, tmp, arg2, old;
 				if (type === 'pop') {
 					result.emit('change', 'pop', pop.call(result));
 				} else if (type === 'push') {
@@ -291,22 +307,32 @@ module.exports = memoize(function (ObservableArray) {
 					}, this);
 					unshift.apply(result, arg1);
 					result.emit('change', 'unshift', arg1);
+				} else if (type === 'index') {
+					tmp = cb(this[arg1], arg1, this);
+					if (tmp === result[arg1]) return;
+					old = result[arg1];
+					result[arg1] = tmp;
+					result.emit('change', 'index', arg1, old);
 				} else if (refresh()) {
 					result.emit('change');
 				}
 			});
 			defineProperties(result, {
 				refresh: d(function (index) {
-					var val;
+					var val, nu;
 					index = index >>> 0;
 					if (!this.hasOwnProperty(index)) return;
 					val = cb(this[index]);
 					cb.clear(this[index]);
-					if (!eq(cb(this[index]), val)) listener();
+					nu = cb(this[index]);
+					if (!eq(nu, val)) {
+						result[index] = nu;
+						result.emit('change', 'index', index, val);
+					}
 				}.bind(this)),
 				refreshAll: d(function () {
 					cb.clearAll();
-					listener();
+					if (refresh()) result.emit('change');
 				}),
 				unref: d(function () {
 					if (disposed) return;
