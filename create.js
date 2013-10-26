@@ -11,6 +11,7 @@ var isSubclassable = require('es5-ext/array/_is-subclassable')
   , ee             = require('event-emitter')
   , memoize        = require('memoizee/lib/regular')
 
+  , slice = Array.prototype.slice
   , defineProperty = Object.defineProperty
   , getPrototypeOf = Object.getPrototypeOf
   , concat, arrSplice;
@@ -88,16 +89,16 @@ module.exports = memoize(function (Constructor) {
 			return this;
 		}),
 		splice: d(function (start, deleteCount/*, …items*/) {
-			var tmp, result, l = arguments.length;
+			var result, l = arguments.length, items;
 			if (!l) return [];
 			if (l <= 2) {
 				if (toInt(start) >= this.length) return [];
 				if (toInt(deleteCount) <= 0) return [];
-			} else if (toInt(start) < this.length) {
-				tmp = aFrom(this);
+			} else {
+				items = slice.call(arguments, 2);
 			}
 			result = splice.apply(this, arguments);
-			if (!tmp || !isCopy.call(this, tmp)) {
+			if ((!items && result.length) || !isCopy.call(items, result)) {
 				this.emit('change', 'splice', arguments, result);
 			}
 			return result;
