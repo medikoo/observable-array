@@ -1,6 +1,6 @@
 'use strict';
 
-var filterMapSlice = require('./filter-map-slice').tests
+var filterMapSliceSorted = require('./filter-map-slice-sorted').tests
 
   , isArray = Array.isArray;
 
@@ -89,5 +89,5 @@ module.exports = function (T, a) {
 	a.deep(arr, ['elo', 'bar', 'abc', 'foo', 'raz', 'wed'], "Unshift: content");
 	a(evented, 16, "Unshift: event");
 
-	filterMapSlice(T, a);
+	filterMapSliceSorted(T, a);
 };
