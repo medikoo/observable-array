@@ -1,13 +1,15 @@
 'use strict';
 
-var validFunction  = require('es5-ext/function/valid-function')
+var aFrom          = require('es5-ext/array/from')
+  , validFunction  = require('es5-ext/function/valid-function')
   , mixin          = require('es5-ext/object/mixin-prototypes')
   , setPrototypeOf = require('es5-ext/object/set-prototype-of')
   , ee             = require('event-emitter/lib/core')
   , d              = require('d/d')
   , memoize        = require('memoizee/lib/regular')
 
-  , create = Object.create, defineProperties = Object.defineProperties
+  , create = Object.create, defineProperty = Object.defineProperty
+  , defineProperties = Object.defineProperties
   , getDescriptor = Object.getOwnPropertyDescriptor
   , getPrototypeOf = Object.getPrototypeOf
   , readOnlyThrow;
@@ -27,6 +29,7 @@ module.exports = memoize(function (Constructor) {
 		return arr;
 	};
 	if (setPrototypeOf) setPrototypeOf(ReadOnly, Constructor);
+	if (!ReadOnly.from) defineProperty(ReadOnly, 'from', d(aFrom));
 
 	ReadOnly.prototype = ee(create(Constructor.prototype, {
 		constructor: d(ReadOnly)

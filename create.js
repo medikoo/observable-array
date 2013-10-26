@@ -11,6 +11,7 @@ var isSubclassable = require('es5-ext/array/_is-subclassable')
   , ee             = require('event-emitter')
   , memoize        = require('memoizee/lib/regular')
 
+  , defineProperty = Object.defineProperty
   , getPrototypeOf = Object.getPrototypeOf
   , concat, arrSplice;
 
@@ -36,6 +37,7 @@ module.exports = memoize(function (Constructor) {
 		return arr;
 	};
 	if (setPrototypeOf) setPrototypeOf(Observable, Constructor);
+	if (!Observable.from) defineProperty(Observable, 'from', d(aFrom));
 
 	pop = Constructor.prototype.pop;
 	push = Constructor.prototype.push;
