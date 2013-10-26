@@ -109,6 +109,18 @@ module.exports = memoize(function (Constructor) {
 			result = unshift.apply(this, arguments);
 			this.emit('change', 'unshift', arguments);
 			return result;
+		}),
+		set: d(function (index, value) {
+			var had, old;
+			index = index >>> 0;
+			if (this.hasOwnProperty(index)) {
+				had = true;
+				old = this[index];
+				if (old === value) return;
+			}
+			this[index] = value;
+			if (had) this.emit('change', 'index', index, old);
+			else this.emit('change', 'index', index);
 		})
 	}));
 
