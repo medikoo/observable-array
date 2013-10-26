@@ -54,14 +54,14 @@ module.exports = memoize(function (Constructor) {
 			var element;
 			if (!this.length) return;
 			element = pop.call(this);
-			this.emit('change');
+			this.emit('change', 'pop', element);
 			return element;
 		}),
 		push: d(function (item/*, …items*/) {
 			var result;
 			if (!arguments.length) return this.length;
 			result = push.apply(this, arguments);
-			this.emit('change');
+			this.emit('change', 'push', arguments);
 			return result;
 		}),
 		reverse: d(function () {
@@ -69,14 +69,14 @@ module.exports = memoize(function (Constructor) {
 			if (this.length <= 1) return this;
 			tmp = aFrom(this);
 			reverse.call(this);
-			if (!isCopy.call(this, tmp)) this.emit('change');
+			if (!isCopy.call(this, tmp)) this.emit('change', 'reverse');
 			return this;
 		}),
 		shift: d(function () {
 			var element;
 			if (!this.length) return;
 			element = shift.call(this);
-			this.emit('change');
+			this.emit('change', 'shift', element);
 			return element;
 		}),
 		sort: d(function (compareFn) {
@@ -84,7 +84,7 @@ module.exports = memoize(function (Constructor) {
 			if (this.length <= 1) return this;
 			tmp = aFrom(this);
 			sort.call(this, compareFn);
-			if (!isCopy.call(this, tmp)) this.emit('change');
+			if (!isCopy.call(this, tmp)) this.emit('change', 'sort', compareFn);
 			return this;
 		}),
 		splice: d(function (start, deleteCount/*, …items*/) {
@@ -97,14 +97,16 @@ module.exports = memoize(function (Constructor) {
 				tmp = aFrom(this);
 			}
 			result = splice.apply(this, arguments);
-			if (!tmp || !isCopy.call(this, tmp)) this.emit('change');
+			if (!tmp || !isCopy.call(this, tmp)) {
+				this.emit('change', 'splice', arguments, result);
+			}
 			return result;
 		}),
 		unshift: d(function (item/*, …items*/) {
 			var result;
 			if (!arguments.length) return this.length;
 			result = unshift.apply(this, arguments);
-			this.emit('change');
+			this.emit('change', 'unshift', arguments);
 			return result;
 		})
 	}));
