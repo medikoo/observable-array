@@ -1,11 +1,11 @@
 'use strict';
 
-var ObservableArray = require('../create')(Array);
+module.exports = exports = function (t, a) {
+	exports.tests(t(require('../create')(Array)), a);
+};
 
-module.exports = function (t, a) {
+exports.tests = function (ObservableArray, a) {
 	var arr, evented = 0, x = {}, y, z, w, arr2, listener;
-
-	t(ObservableArray);
 
 	arr = new ObservableArray('elo', 'bar', 'abc', 'foo', 'raz', 'wed');
 	// Slice
