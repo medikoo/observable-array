@@ -28,6 +28,7 @@ module.exports = memoize(function (ObservableArray) {
 		slice: d(function (start, end) {
 			var result, refresh, listener, disposed;
 			result = new ReadOnly();
+			if (start === end) return result;
 			refresh = function () {
 				var s = start, e = end, length = this.length, changed, i;
 				if (s < 0) s = max(length + s, 0);
