@@ -103,7 +103,7 @@ module.exports = memoize(function (ObservableArray) {
 				}.bind(this);
 				recalculate();
 				refresh();
-				this.on('change', listener = function (type, arg1, arg2) {
+				this.on('change', listener = function (type, arg1) {
 					if (type === 'pop') {
 						if ((rEnd === (this.length + 1)) && (rStart !== rEnd)) {
 							pop.call(result);
