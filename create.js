@@ -5,6 +5,7 @@ var isSubclassable = require('es5-ext/array/_is-subclassable')
   , isCopy         = require('es5-ext/array/#/is-copy')
   , validFunction  = require('es5-ext/function/valid-function')
   , toInt          = require('es5-ext/number/to-int')
+  , eq             = require('es5-ext/object/eq')
   , mixin          = require('es5-ext/object/mixin-prototypes')
   , setPrototypeOf = require('es5-ext/object/set-prototype-of')
   , d              = require('d/d')
@@ -55,14 +56,20 @@ module.exports = memoize(function (Constructor) {
 			var element;
 			if (!this.length) return;
 			element = pop.call(this);
-			this.emit('change', 'pop', element);
+			this.emit('change', {
+				type: 'pop',
+				value: element
+			});
 			return element;
 		}),
 		push: d(function (item/*, …items*/) {
 			var result;
 			if (!arguments.length) return this.length;
 			result = push.apply(this, arguments);
-			this.emit('change', 'push', arguments);
+			this.emit('change', {
+				type: 'push',
+				values: arguments
+			});
 			return result;
 		}),
 		reverse: d(function () {
@@ -70,14 +77,17 @@ module.exports = memoize(function (Constructor) {
 			if (this.length <= 1) return this;
 			tmp = aFrom(this);
 			reverse.call(this);
-			if (!isCopy.call(this, tmp)) this.emit('change', 'reverse');
+			if (!isCopy.call(this, tmp)) this.emit('change', { type: 'reverse' });
 			return this;
 		}),
 		shift: d(function () {
 			var element;
 			if (!this.length) return;
 			element = shift.call(this);
-			this.emit('change', 'shift', element);
+			this.emit('change', {
+				type: 'shift',
+				value: element
+			});
 			return element;
 		}),
 		sort: d(function (compareFn) {
@@ -85,7 +95,12 @@ module.exports = memoize(function (Constructor) {
 			if (this.length <= 1) return this;
 			tmp = aFrom(this);
 			sort.call(this, compareFn);
-			if (!isCopy.call(this, tmp)) this.emit('change', 'sort', compareFn);
+			if (!isCopy.call(this, tmp)) {
+				this.emit('change', {
+					type: 'sort',
+					compareFn: compareFn
+				});
+			}
 			return this;
 		}),
 		splice: d(function (start, deleteCount/*, …items*/) {
@@ -99,7 +114,11 @@ module.exports = memoize(function (Constructor) {
 			}
 			result = splice.apply(this, arguments);
 			if ((!items && result.length) || !isCopy.call(items, result)) {
-				this.emit('change', 'splice', arguments, result);
+				this.emit('change', {
+					type: 'splice',
+					arguments: arguments,
+					removed: result
+				});
 			}
 			return result;
 		}),
@@ -107,20 +126,27 @@ module.exports = memoize(function (Constructor) {
 			var result;
 			if (!arguments.length) return this.length;
 			result = unshift.apply(this, arguments);
-			this.emit('change', 'unshift', arguments);
+			this.emit('change', {
+				type: 'unshift',
+				values: arguments
+			});
 			return result;
 		}),
 		set: d(function (index, value) {
-			var had, old;
+			var had, old, event;
 			index = index >>> 0;
 			if (this.hasOwnProperty(index)) {
 				had = true;
 				old = this[index];
-				if (old === value) return;
+				if (eq(old, value)) return;
 			}
 			this[index] = value;
-			if (had) this.emit('change', 'index', index, old);
-			else this.emit('change', 'index', index);
+			event = {
+				type: 'set',
+				index: index
+			};
+			if (had) event.oldValue = old;
+			this.emit('change', event);
 		})
 	}));
 

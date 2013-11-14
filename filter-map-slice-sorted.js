@@ -66,35 +66,36 @@ module.exports = memoize(function (ObservableArray) {
 				// Pure copy
 				rStart = 0;
 				result = ReadOnly.from(this);
-				this.on('change', listener = function (type, arg1, arg2) {
+				this.on('change', listener = function (event) {
+					var type = event.type;
 					if (type === 'pop') {
 						pop.call(result);
-						result.emit('change', 'pop', arg1);
+						result.emit('change', event);
 					} else if (type === 'push') {
-						push.apply(result, arg1);
-						result.emit('change', 'push', arg1);
+						push.apply(result, event.values);
+						result.emit('change', event);
 					} else if (type === 'reverse') {
 						reverse.call(result);
-						result.emit('change', 'reverse');
+						result.emit('change', event);
 					} else if (type === 'shift') {
 						shift.call(result);
-						result.emit('change', 'shift', arg1);
+						result.emit('change', event);
 					} else if (type === 'sort') {
-						sort.call(result, arg1);
-						result.emit('change', 'sort', arg1);
+						sort.call(result, event.compareFn);
+						result.emit('change', event);
 					} else if (type === 'splice') {
-						arg2 = splice.apply(result, arg1);
-						result.emit('change', 'splice', arg1, arg2);
+						splice.apply(result, event.arguments);
+						result.emit('change', event);
 					} else if (type === 'unshift') {
-						unshift.apply(result, arg1);
-						result.emit('change', 'unshift', arg1);
-					} else if (type === 'index') {
-						result[arg1] = this[arg1];
-						result.emit('change', 'index', arg1, arg2);
+						unshift.apply(result, event.values);
+						result.emit('change', event);
+					} else if (type === 'set') {
+						result[event.index] = this[event.index];
+						result.emit('change', event);
 					} else {
 						rEnd = this.length;
 						refresh();
-						result.emit('change');
+						result.emit('change', event);
 					}
 				});
 			} else {
@@ -111,31 +112,45 @@ module.exports = memoize(function (ObservableArray) {
 				}.bind(this);
 				recalculate();
 				refresh();
-				this.on('change', listener = function (type, arg1, arg2) {
+				this.on('change', listener = function (event) {
+					var type = event.type, values, index, newEvent;
 					if (type === 'pop') {
 						if ((rEnd === (this.length + 1)) && (rStart !== rEnd)) {
 							pop.call(result);
 							recalculate();
-							result.emit('change', 'pop', arg1);
+							result.emit('change', event);
 						} else {
 							recalculate();
 						}
 					} else if (type === 'push') {
 						recalculate();
-						if ((rEnd > (this.length - arg1.length)) && (rStart !== rEnd)) {
+						values = event.values;
+						if ((rEnd > (this.length - values.length)) && (rStart !== rEnd)) {
 							if (rEnd !== this.length) {
-								arg1 = slice.call(arg1, 0, arg1.length - (this.length - rEnd));
+								values = slice.call(values, 0,
+									values.length - (this.length - rEnd));
 							}
-							push.apply(result, arg1);
-							result.emit('change', 'push', arg1);
+							push.apply(result, values);
+							result.emit('change', {
+								type: 'push',
+								values: values
+							});
 						}
-					} else if (type === 'index') {
-						if ((rStart > arg1) || (rEnd <= arg1)) return;
-						result[arg1 - rStart] = this[arg1];
-						result.emit('change', 'index', arg1 - rStart, arg2);
+					} else if (type === 'set') {
+						index = event.index;
+						if ((rStart > index) || (rEnd <= index)) return;
+						result[index - rStart] = this[index];
+						newEvent = {
+							type: 'set',
+							index: index - rStart
+						};
+						if (event.hasOwnProperty('oldValue')) {
+							newEvent.oldValue = event.oldValue;
+						}
+						result.emit('change', newEvent);
 					} else {
 						recalculate();
-						if (refresh()) result.emit('change');
+						if (refresh()) result.emit('change', {});
 					}
 				});
 			}
@@ -178,51 +193,59 @@ module.exports = memoize(function (ObservableArray) {
 				return changed;
 			}.bind(this);
 			refresh();
-			this.on('change', listener = function (type, arg1, arg2) {
-				var i, tmp;
+			this.on('change', listener = function (event) {
+				var i, tmp, type = event.type, values, value;
 				if (type === 'pop') {
-					if (!cb(arg1)) return;
+					if (!cb(event.value)) return;
 					pop.call(result);
-					result.emit('change', 'pop', arg1);
+					result.emit('change', event);
 				} else if (type === 'push') {
-					i = this.length - arg1.length;
-					arg1 = filter.call(arg1, function (val) {
+					values = event.values;
+					i = this.length - values.length;
+					value = filter.call(values, function (val) {
 						return cb(val, i++, this);
 					}, this);
-					if (!arg1.length) return;
-					push.apply(result, arg1);
-					result.emit('change', 'push', arg1);
+					if (!values.length) return;
+					push.apply(result, values);
+					result.emit('change', {
+						type: 'push',
+						values: values
+					});
 				} else if (type === 'reverse') {
 					if (result.length <= 1) return;
 					tmp = aFrom(result);
 					reverse.call(result);
-					if (!isCopy.call(result, tmp)) result.emit('change', 'reverse');
+					if (!isCopy.call(result, tmp)) result.emit('change', event);
 				} else if (type === 'shift') {
-					if (!cb(arg1)) return;
+					if (!cb(event.value)) return;
 					shift.call(result);
-					result.emit('change', 'shift', arg1);
+					result.emit('change', event);
 				} else if (type === 'sort') {
 					if (result.length <= 1) return;
 					tmp = aFrom(result);
-					sort.call(result, arg1);
-					if (!isCopy.call(result, tmp)) result.emit('change', 'sort', arg1);
+					sort.call(result, event.compareFn);
+					if (!isCopy.call(result, tmp)) result.emit('change', event);
 				} else if (type === 'splice') {
-					if (refresh()) result.emit('change');
+					if (refresh()) result.emit('change', {});
 				} else if (type === 'unshift') {
-					arg1 = filter.call(arg1, function (val, i) {
+					values = event.values;
+					values = filter.call(values, function (val, i) {
 						return cb(val, i, this);
 					}, this);
-					if (!arg1.length) return;
-					unshift.apply(result, arg1);
-					result.emit('change', 'unshift', arg1);
-				} else if (type === 'index') {
-					if ((arguments.length < 3) ||
-							(Boolean(cb(arg2)) !== Boolean(cb(this[arg1], arg1, this)))) {
-						if (refresh()) result.emit('change');
-						return;
+					if (!values.length) return;
+					unshift.apply(result, values);
+					result.emit('change', {
+						type: 'unshift',
+						values: values
+					});
+				} else if (type === 'set') {
+					if (!cb(this[event.index], event.index, this)) {
+						if (!event.hasOwnProperty('oldValue')) return;
+						if (!cb(event.oldValue)) return;
 					}
+					if (refresh()) result.emit('change', {});
 				} else if (refresh()) {
-					result.emit('change');
+					result.emit('change', {});
 				}
 			});
 			defineProperties(result, {
@@ -234,12 +257,12 @@ module.exports = memoize(function (ObservableArray) {
 					cb.clear(this[index]);
 					if (Boolean(cb(this[index])) !== filtered) {
 						refresh();
-						result.emit('change');
+						result.emit('change', {});
 					}
 				}.bind(this)),
 				refreshAll: d(function () {
 					cb.clearAll();
-					if (refresh()) result.emit('change');
+					if (refresh()) result.emit('change', {});
 				}),
 				unref: d(function () {
 					if (disposed) return;
@@ -275,49 +298,62 @@ module.exports = memoize(function (ObservableArray) {
 				return changed;
 			}.bind(this);
 			refresh();
-			this.on('change', listener = function (type, arg1) {
-				var i, tmp, arg2, old;
+			this.on('change', listener = function (event) {
+				var i, value, old, type = event.type, values, args, removed, newEvent
+				  , tmp;
 				if (type === 'pop') {
-					result.emit('change', 'pop', pop.call(result));
+					result.emit('change', { type: 'pop', value: pop.call(result) });
 				} else if (type === 'push') {
-					i = this.length - arg1.length;
-					arg1 = map.call(arg1, function (val) {
+					values = event.values;
+					i = this.length - values.length;
+					values = map.call(values, function (val) {
 						return cb(val, i++, this);
 					}, this);
-					push.apply(result, arg1);
-					result.emit('change', 'push', arg1);
+					push.apply(result, values);
+					result.emit('change', {
+						type: 'push',
+						values: values
+					});
 				} else if (type === 'reverse') {
 					tmp = aFrom(result);
 					reverse.call(result);
-					if (!isCopy.call(result, tmp)) result.emit('change', 'reverse');
+					if (!isCopy.call(result, tmp)) result.emit('change', event);
 				} else if (type === 'shift') {
-					result.emit('change', 'shift', shift.call(result));
+					result.emit('change', { type: 'shift', value: shift.call(result) });
 				} else if (type === 'splice') {
-					i = toInt(arg1);
+					i = toInt(event.arguments[0]);
 					if (i < 0) i = this.length - i;
-					arg1 = map.call(arg1, function (val, j) {
+					args = map.call(event.arguments, function (val, j) {
 						if (j < 2) return val;
 						return cb(val, i++, this);
 					}, this);
-					arg2 = splice.apply(result, arg1);
-					if (((arg1.length <= 2) && arg2.length) ||
-							!isCopy.call(arg1.slice(2), arg2)) {
-						result.emit('change', 'splice', arg1, arg2);
+					removed = splice.apply(result, args);
+					if (((event.arguments.length <= 2) && removed.length) ||
+							!isCopy.call(event.arguments.slice(2), removed)) {
+						result.emit('change', {
+							type: 'splice',
+							argumens: args,
+							removed: removed
+						});
 					}
 				} else if (type === 'unshift') {
-					arg1 = map.call(arg1, function (val, i) {
+					values = map.call(event.values, function (val, i) {
 						return cb(val, i, this);
 					}, this);
-					unshift.apply(result, arg1);
-					result.emit('change', 'unshift', arg1);
-				} else if (type === 'index') {
-					tmp = cb(this[arg1], arg1, this);
-					if (tmp === result[arg1]) return;
-					old = result[arg1];
-					result[arg1] = tmp;
-					result.emit('change', 'index', arg1, old);
+					unshift.apply(result, values);
+					result.emit('change', { type: 'unshift', values: values });
+				} else if (type === 'set') {
+					value = cb(this[event.index], event.index, this);
+					if (event.hasOwnProperty('oldValue')) {
+						old = result[event.index];
+						if (value === old) return;
+					}
+					result[event.index] = value;
+					newEvent = { type: 'set', index: event.index };
+					if (event.hasOwnProperty('oldValue')) newEvent.oldValue = old;
+					result.emit('change', newEvent);
 				} else if (refresh()) {
-					result.emit('change');
+					result.emit('change', {});
 				}
 			});
 			defineProperties(result, {
@@ -330,12 +366,12 @@ module.exports = memoize(function (ObservableArray) {
 					nu = cb(this[index]);
 					if (!eq(nu, val)) {
 						result[index] = nu;
-						result.emit('change', 'index', index, val);
+						result.emit('change', { type: 'set', index: index, oldValue: val });
 					}
 				}.bind(this)),
 				refreshAll: d(function () {
 					cb.clearAll();
-					if (refresh()) result.emit('change');
+					if (refresh()) result.emit('change', {});
 				}),
 				unref: d(function () {
 					if (disposed) return;
@@ -368,38 +404,39 @@ module.exports = memoize(function (ObservableArray) {
 				});
 				return changed;
 			}.bind(this);
-			this.on('change', listener = function (type, arg1, arg2) {
-				var i;
+			this.on('change', listener = function (event) {
+				var i, type = event.type;
 				if ((type === 'reverse') || (type === 'sort')) return;
 				if ((type === 'pop') || (type === 'shift')) {
-					i = eIndexOf.call(result, arg1);
-					result.emit('change', 'splice', [i, 1], splice.call(result, i, 1));
+					i = eIndexOf.call(result, event.value);
+					result.emit('change', { type: 'splice', arguments: [i, 1],
+						removed: splice.call(result, i, 1) });
 				} else if ((type === 'push') || (type === 'unshift')) {
-					push.apply(result, arg1);
+					push.apply(result, event.values);
 					sort.call(result, compareFn);
-					result.emit('change');
+					result.emit('change', {});
 				} else if (type === 'splice') {
-					remove.apply(result, arg2);
-					push.apply(result, slice.call(arg1, 2));
+					remove.apply(result, event.removed);
+					push.apply(result, slice.call(event.arguments, 2));
 					sort.call(result, compareFn);
-					result.emit('change');
-				} else if (type === 'index') {
-					if (arguments.length > 2) {
-						result[eIndexOf.call(result, arg2)] = this[arg1];
+					result.emit('change', {});
+				} else if (type === 'set') {
+					if (event.hasOwnProperty('oldValue')) {
+						result[eIndexOf.call(result, event.oldValue)] = this[event.index];
 					} else {
-						push.call(result, this[arg1]);
+						push.call(result, this[event.index]);
 					}
-					result.emit('change');
+					if (refresh()) result.emit('change', {});
 				} else if (refresh()) {
-					result.emit('change');
+					result.emit('change', {});
 				}
 			});
 			defineProperties(result, {
 				refresh: d(function (index) {
-					if (refresh()) result.emit('change');
+					if (refresh()) result.emit('change', {});
 				}.bind(this)),
 				refreshAll: d(function () {
-					if (refresh()) result.emit('change');
+					if (refresh()) result.emit('change', {});
 				}),
 				unref: d(function () {
 					if (disposed) return;
