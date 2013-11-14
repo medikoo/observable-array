@@ -11,5 +11,5 @@ nomen
 plusplus
 
 ./create.js
-./filter-map-slice.js
+./filter-map-slice-sorted.js
 bitwise
