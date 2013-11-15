@@ -13,7 +13,7 @@ var isSubclassable     = require('es5-ext/array/_is-subclassable')
   , ee                 = require('event-emitter')
   , memoize            = require('memoizee/lib/regular')
 
-  , slice = Array.prototype.slice
+  , isArray = Array.isArray, slice = Array.prototype.slice
   , defineProperty = Object.defineProperty
   , getPrototypeOf = Object.getPrototypeOf
   , concat, arrSplice;
@@ -31,6 +31,9 @@ module.exports = memoize(function (Constructor) {
 	var Observable, pop, push, reverse, shift, sort, splice, unshift;
 
 	validFunction(Constructor);
+	if (!isArray(new Constructor())) {
+		throw new TypeError(Constructor + "is not an array constructor");
+	}
 	Observable = function (len) {
 		var arr, proto = (this instanceof Observable) ?
 				getPrototypeOf(this) : Observable.prototype;
