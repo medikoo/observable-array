@@ -1,16 +1,17 @@
 'use strict';
 
-var isSubclassable = require('es5-ext/array/_is-subclassable')
-  , aFrom          = require('es5-ext/array/from')
-  , isCopy         = require('es5-ext/array/#/is-copy')
-  , validFunction  = require('es5-ext/function/valid-function')
-  , toInt          = require('es5-ext/number/to-int')
-  , eq             = require('es5-ext/object/eq')
-  , mixin          = require('es5-ext/object/mixin-prototypes')
-  , setPrototypeOf = require('es5-ext/object/set-prototype-of')
-  , d              = require('d/d')
-  , ee             = require('event-emitter')
-  , memoize        = require('memoizee/lib/regular')
+var isSubclassable     = require('es5-ext/array/_is-subclassable')
+  , aFrom              = require('es5-ext/array/from')
+  , isCopy             = require('es5-ext/array/#/is-copy')
+  , validFunction      = require('es5-ext/function/valid-function')
+  , toInt              = require('es5-ext/number/to-int')
+  , eq                 = require('es5-ext/object/eq')
+  , mixin              = require('es5-ext/object/mixin-prototypes')
+  , setPrototypeOf     = require('es5-ext/object/set-prototype-of')
+  , d                  = require('d/d')
+  , isObservableSymbol = require('observable-value/symbol-is-observable')
+  , ee                 = require('event-emitter')
+  , memoize            = require('memoizee/lib/regular')
 
   , slice = Array.prototype.slice
   , defineProperty = Object.defineProperty
@@ -149,6 +150,7 @@ module.exports = memoize(function (Constructor) {
 			this.emit('change', event);
 		})
 	}));
+	defineProperty(Observable.prototype, isObservableSymbol, d('', true));
 
 	if (isSubclassable) {
 		Object.defineProperty(Observable.prototype, 'concat', d(concat));
