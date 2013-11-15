@@ -152,9 +152,7 @@ module.exports = memoize(function (Constructor) {
 	}));
 	defineProperty(Observable.prototype, isObservableSymbol, d('', true));
 
-	if (isSubclassable) {
-		Object.defineProperty(Observable.prototype, 'concat', d(concat));
-	}
+	if (isSubclassable) defineProperty(Observable.prototype, 'concat', d(concat));
 
 	return Observable;
 });
