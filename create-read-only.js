@@ -8,6 +8,7 @@ var aFrom          = require('es5-ext/array/from')
   , d              = require('d/d')
   , memoize        = require('memoizee/lib/regular')
 
+  , isArray = Array.isArray
   , create = Object.create, defineProperty = Object.defineProperty
   , defineProperties = Object.defineProperties
   , getDescriptor = Object.getOwnPropertyDescriptor
@@ -20,6 +21,9 @@ module.exports = memoize(function (Constructor) {
 	var ReadOnly, descs;
 
 	validFunction(Constructor);
+	if (!isArray(new Constructor())) {
+		throw new TypeError(Constructor + "is not an array constructor");
+	}
 	ReadOnly = function (len) {
 		var arr, proto = (this instanceof ReadOnly) ?
 				getPrototypeOf(this) : ReadOnly.prototype;
