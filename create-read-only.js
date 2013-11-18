@@ -1,6 +1,7 @@
 'use strict';
 
 var aFrom          = require('es5-ext/array/from')
+  , validArray     = require('es5-ext/array/valid-array')
   , validFunction  = require('es5-ext/function/valid-function')
   , mixin          = require('es5-ext/object/mixin-prototypes')
   , setPrototypeOf = require('es5-ext/object/set-prototype-of')
@@ -8,7 +9,6 @@ var aFrom          = require('es5-ext/array/from')
   , d              = require('d/d')
   , memoize        = require('memoizee/lib/regular')
 
-  , isArray = Array.isArray
   , create = Object.create, defineProperty = Object.defineProperty
   , defineProperties = Object.defineProperties
   , getDescriptor = Object.getOwnPropertyDescriptor
@@ -21,9 +21,8 @@ module.exports = memoize(function (Constructor) {
 	var ReadOnly, descs;
 
 	validFunction(Constructor);
-	if (!isArray(new Constructor())) {
-		throw new TypeError(Constructor + "is not an array constructor");
-	}
+	validArray(Constructor.prototype);
+
 	ReadOnly = function (len) {
 		var arr, proto = (this instanceof ReadOnly) ?
 				getPrototypeOf(this) : ReadOnly.prototype;

@@ -2,6 +2,7 @@
 
 var isSubclassable     = require('es5-ext/array/_is-subclassable')
   , aFrom              = require('es5-ext/array/from')
+  , validArray         = require('es5-ext/array/valid-array')
   , isCopy             = require('es5-ext/array/#/is-copy')
   , validFunction      = require('es5-ext/function/valid-function')
   , toInt              = require('es5-ext/number/to-int')
@@ -13,8 +14,9 @@ var isSubclassable     = require('es5-ext/array/_is-subclassable')
   , ee                 = require('event-emitter')
   , memoize            = require('memoizee/lib/regular')
 
-  , isArray = Array.isArray, slice = Array.prototype.slice
+  , slice = Array.prototype.slice
   , defineProperty = Object.defineProperty
+  , defineProperties = Object.defineProperties
   , getPrototypeOf = Object.getPrototypeOf
   , concat, arrSplice;
 
@@ -31,9 +33,8 @@ module.exports = memoize(function (Constructor) {
 	var Observable, pop, push, reverse, shift, sort, splice, unshift;
 
 	validFunction(Constructor);
-	if (!isArray(new Constructor())) {
-		throw new TypeError(Constructor + "is not an array constructor");
-	}
+	validArray(Constructor.prototype);
+
 	Observable = function (len) {
 		var arr, proto = (this instanceof Observable) ?
 				getPrototypeOf(this) : Observable.prototype;
@@ -54,7 +55,13 @@ module.exports = memoize(function (Constructor) {
 			arrSplice : Constructor.prototype.splice;
 	unshift = Constructor.prototype.unshift;
 
-	Observable.prototype = ee(Object.create(Array.prototype, {
+	Observable.prototype = [];
+	if (setPrototypeOf) {
+		setPrototypeOf(Observable.prototype, Constructor.prototype);
+	} else {
+		mixin(Observable.prototype, Constructor.prototype);
+	}
+	defineProperties(ee(Observable.prototype), {
 		constructor: d(Observable),
 		pop: d(function () {
 			var element;
@@ -152,7 +159,7 @@ module.exports = memoize(function (Constructor) {
 			if (had) event.oldValue = old;
 			this.emit('change', event);
 		})
-	}));
+	});
 	defineProperty(Observable.prototype, isObservableSymbol, d('', true));
 
 	if (isSubclassable) defineProperty(Observable.prototype, 'concat', d(concat));

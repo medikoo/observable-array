@@ -1,18 +1,20 @@
 'use strict';
 
-var aFrom          = require('es5-ext/array/from')
-  , eIndexOf       = require('es5-ext/array/#/e-index-of')
-  , isCopy         = require('es5-ext/array/#/is-copy')
-  , remove         = require('es5-ext/array/#/remove')
-  , invoke         = require('es5-ext/function/invoke')
-  , toInt          = require('es5-ext/number/to-int')
-  , eq             = require('es5-ext/object/eq')
-  , callable       = require('es5-ext/object/valid-callable')
-  , value          = require('es5-ext/object/valid-value')
-  , d              = require('d/d')
-  , memoize        = require('memoizee/lib/regular')
-  , memoizeMethods = require('memoizee/lib/d')(memoize)
-  , createReadOnly = require('./create-read-only')
+var aFrom                = require('es5-ext/array/from')
+  , eIndexOf             = require('es5-ext/array/#/e-index-of')
+  , isCopy               = require('es5-ext/array/#/is-copy')
+  , remove               = require('es5-ext/array/#/remove')
+  , invoke               = require('es5-ext/function/invoke')
+  , validFunction        = require('es5-ext/function/valid-function')
+  , toInt                = require('es5-ext/number/to-int')
+  , eq                   = require('es5-ext/object/eq')
+  , callable             = require('es5-ext/object/valid-callable')
+  , value                = require('es5-ext/object/valid-value')
+  , d                    = require('d/d')
+  , memoize              = require('memoizee/lib/regular')
+  , memoizeMethods       = require('memoizee/lib/d')(memoize)
+  , createReadOnly       = require('./create-read-only')
+  , validObservableArray = require('./valid-observable-array')
 
   , filter = Array.prototype.filter, forEach = Array.prototype.forEach
   , map = Array.prototype.map, pop = Array.prototype.pop
@@ -29,7 +31,11 @@ require('memoizee/lib/ext/resolvers');
 require('memoizee/lib/ext/dispose');
 
 module.exports = memoize(function (ObservableArray) {
-	var ReadOnly = createReadOnly(ObservableArray);
+	var ReadOnly;
+
+	validFunction(ObservableArray);
+	validObservableArray(ObservableArray.prototype);
+	ReadOnly = createReadOnly(ObservableArray);
 
 	defineProperties(ObservableArray.prototype, memoizeMethods({
 		slice: d(function (start, end) {
