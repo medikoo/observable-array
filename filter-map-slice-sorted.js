@@ -199,7 +199,7 @@ module.exports = memoize(function (ObservableArray) {
 			}.bind(this);
 			refresh();
 			this.on('change', listener = function (event) {
-				var i, tmp, type = event.type, values, value;
+				var i, tmp, type = event.type, values;
 				if (type === 'pop') {
 					if (!cb(event.value)) return;
 					pop.call(result);
