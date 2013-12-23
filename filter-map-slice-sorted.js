@@ -207,7 +207,7 @@ module.exports = memoize(function (ObservableArray) {
 				} else if (type === 'push') {
 					values = event.values;
 					i = this.length - values.length;
-					value = filter.call(values, function (val) {
+					values = filter.call(values, function (val) {
 						return cb(val, i++, this);
 					}, this);
 					if (!values.length) return;
