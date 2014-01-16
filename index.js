@@ -1,5 +1,5 @@
 'use strict';
 
-module.exports = require('./filter-map-slice-sorted')(
+module.exports = require('./length')(require('./filter-map-slice-sorted')(
 	require('./create')(Array)
-);
+));

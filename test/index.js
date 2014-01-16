@@ -1,6 +1,7 @@
 'use strict';
 
 var filterMapSliceSorted = require('./filter-map-slice-sorted').tests
+  , length               = require('./length').tests
 
   , isArray = Array.isArray;
 
@@ -90,4 +91,5 @@ module.exports = function (T, a) {
 	a(evented, 16, "Unshift: event");
 
 	filterMapSliceSorted(T, a);
+	length(T, a);
 };
