@@ -1,6 +1,6 @@
 'use strict';
 
-var isSubclassable     = require('es5-ext/array/_is-subclassable')
+var isExtensible       = require('es5-ext/array/_is-extensible')
   , aFrom              = require('es5-ext/array/from')
   , validArray         = require('es5-ext/array/valid-array')
   , isCopy             = require('es5-ext/array/#/is-copy')
@@ -24,7 +24,7 @@ require('memoizee/lib/ext/ref-counter');
 require('memoizee/lib/ext/resolvers');
 require('memoizee/lib/ext/dispose');
 
-if (!isSubclassable) {
+if (!isExtensible) {
 	concat = require('es5-ext/array/#/concat');
 	arrSplice = require('es5-ext/array/#/splice');
 }
@@ -162,7 +162,7 @@ module.exports = memoize(function (Constructor) {
 	});
 	defineProperty(Observable.prototype, isObservableSymbol, d('', true));
 
-	if (isSubclassable) defineProperty(Observable.prototype, 'concat', d(concat));
+	if (isExtensible) defineProperty(Observable.prototype, 'concat', d(concat));
 
 	return Observable;
 });
