@@ -6,7 +6,7 @@ var aFrom                = require('es5-ext/array/from')
   , remove               = require('es5-ext/array/#/remove')
   , invoke               = require('es5-ext/function/invoke')
   , validFunction        = require('es5-ext/function/valid-function')
-  , toInt                = require('es5-ext/number/to-int')
+  , toInteger            = require('es5-ext/number/to-integer')
   , eq                   = require('es5-ext/object/eq')
   , callable             = require('es5-ext/object/valid-callable')
   , value                = require('es5-ext/object/valid-value')
@@ -170,8 +170,8 @@ module.exports = memoize(function (ObservableArray) {
 				}.bind(this))
 			});
 			return result;
-		}, { resolvers: [toInt,
-			function (val) { return (val === undefined) ? Infinity : toInt(val); }],
+		}, { resolvers: [toInteger,
+			function (val) { return (val === undefined) ? Infinity : toInteger(val); }],
 			refCounter: true, dispose: invokeDispose }),
 
 		filter: d(function (callbackFn/*, thisArg*/) {
@@ -326,7 +326,7 @@ module.exports = memoize(function (ObservableArray) {
 				} else if (type === 'shift') {
 					result.emit('change', { type: 'shift', value: shift.call(result) });
 				} else if (type === 'splice') {
-					i = toInt(event.arguments[0]);
+					i = toInteger(event.arguments[0]);
 					if (i < 0) i = this.length - i;
 					args = map.call(event.arguments, function (val, j) {
 						if (j < 2) return val;

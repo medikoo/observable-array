@@ -5,7 +5,7 @@ var isExtensible       = require('es5-ext/array/_is-extensible')
   , validArray         = require('es5-ext/array/valid-array')
   , isCopy             = require('es5-ext/array/#/is-copy')
   , validFunction      = require('es5-ext/function/valid-function')
-  , toInt              = require('es5-ext/number/to-int')
+  , toInteger          = require('es5-ext/number/to-integer')
   , eq                 = require('es5-ext/object/eq')
   , mixin              = require('es5-ext/object/mixin-prototypes')
   , setPrototypeOf     = require('es5-ext/object/set-prototype-of')
@@ -118,8 +118,8 @@ module.exports = memoize(function (Constructor) {
 			var result, l = arguments.length, items;
 			if (!l) return [];
 			if (l <= 2) {
-				if (toInt(start) >= this.length) return [];
-				if (toInt(deleteCount) <= 0) return [];
+				if (toInteger(start) >= this.length) return [];
+				if (toInteger(deleteCount) <= 0) return [];
 			} else {
 				items = slice.call(arguments, 2);
 			}
