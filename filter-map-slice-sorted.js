@@ -170,9 +170,9 @@ module.exports = memoize(function (ObservableArray) {
 				}.bind(this))
 			});
 			return result;
-		}, { resolvers: [toInteger,
-			function (val) { return (val === undefined) ? Infinity : toInteger(val); }],
-			refCounter: true, dispose: invokeDispose }),
+		}, { resolvers: [toInteger, function (val) {
+			return (val === undefined) ? Infinity : toInteger(val);
+		}], refCounter: true, dispose: invokeDispose }),
 
 		filter: d(function (callbackFn/*, thisArg*/) {
 			var result, listener, refresh, thisArg, cb, disposed;
