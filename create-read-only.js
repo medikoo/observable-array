@@ -6,7 +6,7 @@ var aFrom          = require('es5-ext/array/from')
   , mixin          = require('es5-ext/object/mixin-prototypes')
   , setPrototypeOf = require('es5-ext/object/set-prototype-of')
   , ee             = require('event-emitter')
-  , d              = require('d/d')
+  , d              = require('d')
   , memoize        = require('memoizee/lib/regular')
 
   , create = Object.create, defineProperty = Object.defineProperty

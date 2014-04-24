@@ -1,7 +1,7 @@
 'use strict';
 
 var validFunction        = require('es5-ext/function/valid-function')
-  , d                    = require('d/d')
+  , d                    = require('d')
   , lazy                 = require('d/lazy')
   , memoize              = require('memoizee/lib/regular')
   , validObservableArray = require('./valid-observable-array')
