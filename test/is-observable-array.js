@@ -1,6 +1,6 @@
 'use strict';
 
-var ee              = require('event-emitter/lib/core')
+var ee              = require('event-emitter')
   , ObservableValue = require('observable-value/value')
   , ObservableArray = require('../create')(Array);
 

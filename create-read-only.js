@@ -5,7 +5,7 @@ var aFrom          = require('es5-ext/array/from')
   , validFunction  = require('es5-ext/function/valid-function')
   , mixin          = require('es5-ext/object/mixin-prototypes')
   , setPrototypeOf = require('es5-ext/object/set-prototype-of')
-  , ee             = require('event-emitter/lib/core')
+  , ee             = require('event-emitter')
   , d              = require('d/d')
   , memoize        = require('memoizee/lib/regular')
 
