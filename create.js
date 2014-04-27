@@ -12,17 +12,13 @@ var isExtensible       = require('es5-ext/array/_is-extensible')
   , d                  = require('d')
   , isObservableSymbol = require('observable-value/symbol-is-observable')
   , ee                 = require('event-emitter')
-  , memoize            = require('memoizee/lib/regular')
+  , memoize            = require('memoizee/plain')
 
   , slice = Array.prototype.slice
   , defineProperty = Object.defineProperty
   , defineProperties = Object.defineProperties
   , getPrototypeOf = Object.getPrototypeOf
   , concat, arrSplice;
-
-require('memoizee/lib/ext/ref-counter');
-require('memoizee/lib/ext/resolvers');
-require('memoizee/lib/ext/dispose');
 
 if (!isExtensible) {
 	concat = require('es5-ext/array/#/concat');
@@ -165,4 +161,4 @@ module.exports = memoize(function (Constructor) {
 	if (isExtensible) defineProperty(Observable.prototype, 'concat', d(concat));
 
 	return Observable;
-});
+}, { normalizer: require('memoizee/normalizers/get-1')() });

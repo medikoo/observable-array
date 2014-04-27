@@ -3,7 +3,7 @@
 var validFunction        = require('es5-ext/function/valid-function')
   , d                    = require('d')
   , lazy                 = require('d/lazy')
-  , memoize              = require('memoizee/lib/regular')
+  , memoize              = require('memoizee/plain')
   , validObservableArray = require('./valid-observable-array')
   , ReadOnly             = require('observable-value/create-read-only')(
 	require('observable-value/value')
@@ -23,4 +23,4 @@ module.exports = memoize(function (ObservableArray) {
 	}));
 
 	return ObservableArray;
-});
+}, { normalizer: require('memoizee/normalizers/get-1')() });

@@ -1,20 +1,23 @@
 'use strict';
 
-var aFrom                = require('es5-ext/array/from')
-  , eIndexOf             = require('es5-ext/array/#/e-index-of')
-  , isCopy               = require('es5-ext/array/#/is-copy')
-  , remove               = require('es5-ext/array/#/remove')
-  , invoke               = require('es5-ext/function/invoke')
-  , validFunction        = require('es5-ext/function/valid-function')
-  , toInteger            = require('es5-ext/number/to-integer')
-  , eq                   = require('es5-ext/object/eq')
-  , callable             = require('es5-ext/object/valid-callable')
-  , value                = require('es5-ext/object/valid-value')
-  , d                    = require('d')
-  , memoize              = require('memoizee/lib/regular')
-  , memoizeMethods       = require('memoizee/lib/d')(memoize)
-  , createReadOnly       = require('./create-read-only')
-  , validObservableArray = require('./valid-observable-array')
+var aFrom                  = require('es5-ext/array/from')
+  , eIndexOf               = require('es5-ext/array/#/e-index-of')
+  , isCopy                 = require('es5-ext/array/#/is-copy')
+  , remove                 = require('es5-ext/array/#/remove')
+  , invoke                 = require('es5-ext/function/invoke')
+  , validFunction          = require('es5-ext/function/valid-function')
+  , toInteger              = require('es5-ext/number/to-integer')
+  , eq                     = require('es5-ext/object/eq')
+  , callable               = require('es5-ext/object/valid-callable')
+  , value                  = require('es5-ext/object/valid-value')
+  , d                      = require('d')
+  , memoize                = require('memoizee/plain')
+  , memoizeMethods         = require('memoizee/methods-plain')
+  , getNormalizer          = require('memoizee/normalizers/get-fixed')
+  , getNormalizer1         = require('memoizee/normalizers/get-1')
+  , getPrimitiveNormalizer = require('memoizee/normalizers/get-primitive-fixed')
+  , createReadOnly         = require('./create-read-only')
+  , validObservableArray   = require('./valid-observable-array')
 
   , filter = Array.prototype.filter, forEach = Array.prototype.forEach
   , map = Array.prototype.map, pop = Array.prototype.pop
@@ -26,9 +29,8 @@ var aFrom                = require('es5-ext/array/from')
   , hasOwnProperty = Object.prototype.hasOwnProperty
   , invokeDispose = invoke('_dispose');
 
-require('memoizee/lib/ext/ref-counter');
-require('memoizee/lib/ext/resolvers');
-require('memoizee/lib/ext/dispose');
+require('memoizee/ext/ref-counter');
+require('memoizee/ext/dispose');
 
 module.exports = memoize(function (ObservableArray) {
 	var ReadOnly;
@@ -162,7 +164,7 @@ module.exports = memoize(function (ObservableArray) {
 			defineProperties(result, {
 				unref: d(function () {
 					if (disposed) return;
-					this.slice.clearRef(start, end);
+					this.slice.deleteRef(start, end);
 				}.bind(this)),
 				_dispose: d(function () {
 					this.off('change', listener);
@@ -172,13 +174,13 @@ module.exports = memoize(function (ObservableArray) {
 			return result;
 		}, { resolvers: [toInteger, function (val) {
 			return (val === undefined) ? Infinity : toInteger(val);
-		}], refCounter: true, dispose: invokeDispose }),
+		}], refCounter: true, dispose: invokeDispose, normalizer: getPrimitiveNormalizer(2) }),
 
 		filter: d(function (callbackFn/*, thisArg*/) {
 			var result, listener, refresh, thisArg, cb, disposed;
 			(value(this) && callable(callbackFn));
 			thisArg = arguments[1];
-			cb = memoize(bind.call(callbackFn, thisArg), { length: 1 });
+			cb = memoize(bind.call(callbackFn, thisArg), { normalizer: getNormalizer1() });
 			result = new ReadOnly();
 			refresh = function () {
 				var i = 0, changed;
@@ -266,12 +268,12 @@ module.exports = memoize(function (ObservableArray) {
 					}
 				}.bind(this)),
 				refreshAll: d(function () {
-					cb.clearAll();
+					cb.clear();
 					if (refresh()) result.emit('change', {});
 				}),
 				unref: d(function () {
 					if (disposed) return;
-					this.filter.clearRef(callbackFn, thisArg);
+					this.filter.deleteRef(callbackFn, thisArg);
 				}.bind(this)),
 				_dispose: d(function () {
 					this.off('change', listener);
@@ -279,13 +281,13 @@ module.exports = memoize(function (ObservableArray) {
 				}.bind(this))
 			});
 			return result;
-		}, { length: 2, refCounter: true, dispose: invokeDispose }),
+		}, { length: 2, refCounter: true, dispose: invokeDispose, getNormalizer: getNormalizer }),
 
 		map: d(function (callbackFn/*, thisArg*/) {
 			var result, listener, refresh, thisArg, disposed, cb;
 			(value(this) && callable(callbackFn));
 			thisArg = arguments[1];
-			cb = memoize(bind.call(callbackFn, thisArg), { length: 1 });
+			cb = memoize(bind.call(callbackFn, thisArg), { normalizer: getNormalizer1() });
 			result = new ReadOnly();
 			refresh = function () {
 				var changed;
@@ -375,12 +377,12 @@ module.exports = memoize(function (ObservableArray) {
 					}
 				}.bind(this)),
 				refreshAll: d(function () {
-					cb.clearAll();
+					cb.clear();
 					if (refresh()) result.emit('change', {});
 				}),
 				unref: d(function () {
 					if (disposed) return;
-					this.map.clearRef(callbackFn, thisArg);
+					this.map.deleteRef(callbackFn, thisArg);
 				}.bind(this)),
 				_dispose: d(function () {
 					this.off('change', listener);
@@ -388,7 +390,7 @@ module.exports = memoize(function (ObservableArray) {
 				}.bind(this))
 			});
 			return result;
-		}, { length: 2, refCounter: true, dispose: invokeDispose }),
+		}, { length: 2, refCounter: true, dispose: invokeDispose, getNormalizer: getNormalizer }),
 
 		sorted: d(function (compareFn) {
 			var result, listener, disposed, refresh;
@@ -445,7 +447,7 @@ module.exports = memoize(function (ObservableArray) {
 				}),
 				unref: d(function () {
 					if (disposed) return;
-					this.sorted.clearRef(compareFn);
+					this.sorted.deleteRef(compareFn);
 				}.bind(this)),
 				_dispose: d(function () {
 					this.off('change', listener);
@@ -453,8 +455,8 @@ module.exports = memoize(function (ObservableArray) {
 				}.bind(this))
 			});
 			return result;
-		}, { length: 2, refCounter: true, dispose: invokeDispose })
+		}, { length: 2, refCounter: true, dispose: invokeDispose, getNormalizer: getNormalizer })
 	}));
 
 	return ObservableArray;
-});
+}, { normalizer: getNormalizer1() });

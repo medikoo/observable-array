@@ -7,7 +7,7 @@ var aFrom          = require('es5-ext/array/from')
   , setPrototypeOf = require('es5-ext/object/set-prototype-of')
   , ee             = require('event-emitter')
   , d              = require('d')
-  , memoize        = require('memoizee/lib/regular')
+  , memoize        = require('memoizee/plain')
 
   , create = Object.create, defineProperty = Object.defineProperty
   , defineProperties = Object.defineProperties
@@ -48,4 +48,4 @@ module.exports = memoize(function (Constructor) {
 	defineProperties(ReadOnly.prototype, descs);
 
 	return ReadOnly;
-});
+}, { normalizer: require('memoizee/normalizers/get-1')() });
