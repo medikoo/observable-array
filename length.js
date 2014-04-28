@@ -5,9 +5,7 @@ var validFunction        = require('es5-ext/function/valid-function')
   , lazy                 = require('d/lazy')
   , memoize              = require('memoizee/plain')
   , validObservableArray = require('./valid-observable-array')
-  , ReadOnly             = require('observable-value/create-read-only')(
-	require('observable-value/value')
-)
+  , ReadOnly             = require('observable-value/create-read-only')(require('observable-value'))
   , defineProperties = Object.defineProperties;
 
 module.exports = memoize(function (ObservableArray) {
