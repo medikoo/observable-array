@@ -1,6 +1,11 @@
 # observable-array
-
 ## Configure observable arrays
+
+### Installation
+
+	$ npm install observable-array
+
+To port it to Browser or any other (non CJS) environment, use your favorite CJS bundler. No favorite yet? Try: [Browserify](http://browserify.org/), [Webmake](https://github.com/medikoo/modules-webmake) or [Webpack](http://webpack.github.io/)
 
 ### Usage
 
@@ -39,17 +44,6 @@ mapped.on('change', function (event) {
 oArr.push(8); // Change: push (mapped == [4, 6, 8, 10, 12, 14, 16])
 oArr.shift(); // Change: shift (mapped == [6, 8, 10, 12, 14, 16])
 ```
-
-### Installation
-#### NPM
-
-In your project path:
-
-	$ npm install observable-array
-
-##### Browser
-
-You can easily bundle _observable-array_ for browser with [modules-webmake](https://github.com/medikoo/modules-webmake)
 
 ## Tests [![Build Status](https://travis-ci.org/medikoo/observable-array.png)](https://travis-ci.org/medikoo/observable-array)
 
