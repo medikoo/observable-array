@@ -1,0 +1,14 @@
+v0.0.1  --  2014.04.29
+* Assure to depend strictly on npm hosted dependencies
+* Observable slices
+* Observable sorts
+* Observable length
+* Memoize slices, maps and filters
+* `set` method to update index'es and assure events propagation
+* Improve characteristics of event object
+* Mark with @@isObservable symbol
+* Add isObservableArray, validObservableArray
+* Improve internals
+
+v0.0.0  --  2013.10.22
+Initial (dev version)
