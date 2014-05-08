@@ -1,3 +1,6 @@
+v0.0.2  --  2014.05.08
+* Update to use latest versions of dependencies
+
 v0.0.1  --  2014.04.29
 * Assure to depend strictly on npm hosted dependencies
 * Observable slices
