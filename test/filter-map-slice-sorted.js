@@ -82,6 +82,11 @@ exports.tests = function (ObservableArray, a) {
 	a.deep(arr2, [22, 20, 64, 40], "Filter: refresh all");
 	a(evented, 3, "Filter: refresh");
 
+	arr2.on('change', function (e) {
+		a.deep(e.arguments, [2, 3], "Splice arguments");
+	});
+	arr.splice(2, 3);
+
 	a.h1("Sorted");
 	x = { val: 32 };
 	y = { val: 23 };

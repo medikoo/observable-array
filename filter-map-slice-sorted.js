@@ -339,7 +339,7 @@ module.exports = memoize(function (ObservableArray) {
 							!isCopy.call(event.arguments.slice(2), removed)) {
 						result.emit('change', {
 							type: 'splice',
-							argumens: args,
+							arguments: args,
 							removed: removed
 						});
 					}
