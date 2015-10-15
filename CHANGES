@@ -1,3 +1,9 @@
+v0.0.3  --  2015.10.15
+* Fix splice handling
+* Fix spelling of LICENSE
+* Configure lint scripts
+* Update dependencies
+
 v0.0.2  --  2014.05.08
 * Update to use latest versions of dependencies
 
